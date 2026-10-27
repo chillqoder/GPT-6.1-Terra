@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#171c19">
+<title>Gorath — Orc Warrior</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { color-scheme: dark; --bone:#eee9d9; --muted:#a4aaa0; --ember:#d35c37; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; width:100%; height:100%; overflow:hidden; }
+  body { background:#171c19; color:var(--bone); font-family:system-ui,sans-serif; }
+  #scene { position:fixed; inset:0; width:100%; height:100%; }
+  #scene canvas { display:block; width:100%; height:100%; cursor:grab; }
+  #scene canvas:active { cursor:grabbing; }
+  .frame { position:fixed; inset:0; pointer-events:none; border:1px solid rgba(232,232,211,.13); margin:18px; }
+  .topbar { position:absolute; top:37px; left:5%; right:5%; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { display:flex; align-items:center; gap:12px; font-family:Impact, 'Arial Narrow', sans-serif; font-weight:600; font-size:14px; letter-spacing:.16em; text-transform:uppercase; }
+  .brand-mark { width:30px; height:30px; display:grid; place-items:center; border:1px solid #ae765e; color:#df8c68; font-size:17px; transform:rotate(45deg); }
+  .brand-mark span { transform:rotate(-45deg); }
+  .top-right { color:#b4b9ac; font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
+  .intro { position:absolute; top:19%; left:7.5%; width:260px; }
+  .eyebrow { display:flex; align-items:center; gap:10px; color:#d78a68; font-size:10px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; }
+  .eyebrow:before { content:''; width:28px; height:1px; background:#d78a68; }
+  h1 { margin:20px 0 12px; font-family:Impact, 'Arial Narrow', sans-serif; text-transform:uppercase; font-size:clamp(58px,7.1vw,108px); font-weight:600; line-height:.88; letter-spacing:-.025em; }
+  h1 span { color:#c7cfba; }
+  .description { color:#adb4a6; max-width:220px; font-size:13px; line-height:1.75; }
+  .number { position:absolute; right:7.5%; top:26%; text-align:right; }
+  .number strong { display:block; font:500 56px/.9 Impact, 'Arial Narrow', sans-serif; color:rgba(232,233,215,.2); }
+  .number span { display:block; margin-top:10px; color:#929b8c; font-size:9px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; }
+  .bottom { position:absolute; left:7.5%; right:7.5%; bottom:48px; display:flex; align-items:end; justify-content:space-between; gap:25px; }
+  .hint { color:#abb2a5; font-size:11px; line-height:1.7; }
+  .hint strong { display:block; color:#e6e8dc; font-size:10px; letter-spacing:.16em; text-transform:uppercase; margin-bottom:5px; }
+  .action { position:absolute; left:50%; bottom:49px; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:11px; pointer-events:auto; }
+  .action-label { color:#aeb5a7; font-size:9px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; white-space:nowrap; }
+  button { border:1px solid #ed8a62; color:#fff3e5; background:linear-gradient(135deg,#bd4b2d,#87321f); border-radius:3px; min-width:184px; padding:15px 25px; font:600 14px Impact, 'Arial Narrow', sans-serif; text-transform:uppercase; letter-spacing:.17em; cursor:pointer; box-shadow:0 8px 35px #8f3d273d, inset 0 1px #ffffff26; transition:transform .18s,box-shadow .18s,filter .18s; }
+  button:hover { filter:brightness(1.15); box-shadow:0 8px 42px #c8523980; transform:translateY(-2px); }
+  button:active { transform:translateY(1px) scale(.98); }
+  button:focus-visible { outline:2px solid #fff; outline-offset:4px; }
+  button:disabled { cursor:wait; opacity:.8; }
+  .status { text-align:right; color:#9fa99a; font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+  .status:before { content:''; display:inline-block; width:6px; height:6px; margin-right:8px; background:#a3b887; border-radius:50%; box-shadow:0 0 10px #a3b887; vertical-align:1px; }
+  .flash { position:fixed; inset:0; pointer-events:none; background:#f3d3a3; opacity:0; transition:opacity .18s ease-out; }
+  .flash.hit { opacity:.13; transition:none; }
+  @media(max-width:700px) {
+    .frame { margin:10px; } .topbar { top:26px; left:7%; right:7%; } .top-right { font-size:8px; }
+    .intro { top:12%; left:8%; width:auto; } h1 { font-size:54px; margin:12px 0 8px; } .description { font-size:11px; max-width:175px; line-height:1.5; }
+    .number { top:19%; right:8%; } .number strong { font-size:37px; } .number span { font-size:8px; }
+    .bottom { bottom:31px; left:8%; right:8%; } .hint { font-size:9px; } .hint strong { font-size:9px; } .status { font-size:8px; }
+    .action { bottom:87px; } button { padding:13px 25px; min-width:165px; }
+  }
+  @media(max-height:600px) and (min-width:701px) { .intro { top:18%; } h1 { font-size:55px; } .bottom,.action { bottom:30px; } }
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="scene" aria-label="Interactive 3D orc warrior"></div>
+<div class="frame" aria-hidden="true"></div>
+<header class="topbar"><div class="brand"><div class="brand-mark"><span>✦</span></div> THE WARRIOR'S CODE</div><div class="top-right">Character study &nbsp; / &nbsp; 01</div></header>
+<section class="intro"><div class="eyebrow">The wildlands collection</div><h1>ORC<br><span>WARRIOR</span></h1><p class="description">Forged in battle. Built for the fight. Meet your fiercest ally.</p></section>
+<div class="number" aria-hidden="true"><strong>01</strong><span>Gorath / The brute</span></div>
+<div class="bottom"><div class="hint"><strong>Take a closer look</strong>Drag to rotate · Scroll to zoom</div><div class="status">Ready for battle</div></div>
+<div class="action"><span class="action-label">Unleash the warrior</span><button id="attackBtn" type="button">⚔ &nbsp; Attack!</button></div>
+<div class="flash" aria-hidden="true"></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// Scene, camera and renderer
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#202720');
+scene.fog = new THREE.Fog('#202720', 10, 24);
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, .1, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.querySelector('#scene').appendChild(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.85, 0);
+controls.enableDamping = true;
+controls.minDistance = 4.5; controls.maxDistance = 20;
+controls.minPolarAngle = .55; controls.maxPolarAngle = Math.PI / 2.05;
+function positionCamera() {
+  camera.position.set(innerWidth < 700 ? 7 : 5.8, innerWidth < 700 ? 4.2 : 3.5, innerWidth < 700 ? 14 : 8.5);
+  controls.update();
+}
+positionCamera();
+
+// Materials and reusable primitive helpers
+const mat = (color, roughness = .85, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
+const skin = mat('#648c49'), skinLight = mat('#779d57'), skinDark = mat('#476d38');
+const leather = mat('#50372a'), leatherLight = mat('#755039'), darkLeather = mat('#342820');
+const iron = mat('#767e78', .4, .75), darkIron = mat('#424b44', .55, .65), gold = mat('#b1935d', .5, .65);
+const bone = mat('#e8ddba'), black = mat('#1d241c'), eye = mat('#d8c880');
+function mesh(geometry, material, parent, x=0, y=0, z=0) {
+  const m = new THREE.Mesh(geometry, material); m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+function box(parent, material, x,y,z, sx,sy,sz, rx=0,ry=0,rz=0) {
+  const m = mesh(new THREE.BoxGeometry(sx,sy,sz),material,parent,x,y,z); m.rotation.set(rx,ry,rz); return m;
+}
+function orb(parent, material, x,y,z, sx,sy,sz, detail=12) {
+  const m = mesh(new THREE.SphereGeometry(1,detail,8),material,parent,x,y,z); m.scale.set(sx,sy,sz); return m;
+}
+function cylinder(parent, material, x,y,z, rt,rb,h, sides=9) { return mesh(new THREE.CylinderGeometry(rt,rb,h,sides),material,parent,x,y,z); }
+function cone(parent, material, x,y,z, radius,height, rx=0,ry=0,rz=0) {
+  const m=mesh(new THREE.ConeGeometry(radius,height,8),material,parent,x,y,z); m.rotation.set(rx,ry,rz); return m;
+}
+function rivet(parent,x,y,z,r=.045) { return orb(parent,gold,x,y,z,r,r,r,8); }
+
+function setupLights() {
+  scene.add(new THREE.HemisphereLight('#c9dcc0','#33372b',2.0));
+  const key = new THREE.DirectionalLight('#ffe3bc',3.2); key.position.set(-4,8,6); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048); key.shadow.camera.left=-7; key.shadow.camera.right=7; key.shadow.camera.top=8; key.shadow.camera.bottom=-7;
+  key.shadow.normalBias=.025; scene.add(key);
+  const rim = new THREE.DirectionalLight('#9bbd85',2.2); rim.position.set(5,4,-5); scene.add(rim);
+  const warm = new THREE.PointLight('#d46c3e', 30, 9); warm.position.set(-4,2.5,2); scene.add(warm);
+}
+setupLights();
+
+// A low stone plinth and a few environmental accents
+const ground=mesh(new THREE.CircleGeometry(30,64),mat('#202720'),scene,0,-.12,0); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true;
+cylinder(scene,darkIron,0,-.025,0,2.05,2.12,.18,48);
+cylinder(scene,mat('#444c3d'),0,.065,0,1.98,2.04,.12,48);
+const ring=mesh(new THREE.TorusGeometry(1.82,.018,6,64),gold,scene,0,.13,0); ring.rotation.x=Math.PI/2;
+for(let i=0;i<16;i++){ const a=i*Math.PI/8; const m=box(scene,mat('#72765c'),Math.cos(a)*1.9,.134,Math.sin(a)*1.9,.075,.012,.025); m.rotation.y=-a; }
+
+// Curved, double-bladed axe built from extruded shapes
+function createAxe() {
+  const axe=new THREE.Group();
+  cylinder(axe,leatherLight,0,.62,0,.065,.075,2.05,10);
+  cylinder(axe,darkIron,0,-.43,0,.085,.08,.13,10);
+  for(let i=0;i<5;i++) { const band=mesh(new THREE.TorusGeometry(.075,.014,6,10),darkLeather,axe,0,.05+i*.105,0); band.rotation.x=Math.PI/2; }
+  box(axe,darkIron,0,1.36,0,.26,.34,.22);
+  const shape=new THREE.Shape();
+  shape.moveTo(.08,-.19); shape.lineTo(.36,-.24); shape.quadraticCurveTo(.66,-.48,.77,-.53);
+  shape.quadraticCurveTo(.56,0,.77,.53); shape.quadraticCurveTo(.62,.45,.36,.24); shape.lineTo(.08,.19); shape.closePath();
+  const geo=new THREE.ExtrudeGeometry(shape,{depth:.10,bevelEnabled:true,bevelThickness:.025,bevelSize:.035,bevelSegments:1,curveSegments:7});
+  for(const side of [-1,1]) { const blade=mesh(geo,iron,axe,0,1.36,-.05); blade.scale.x=side; }
+  for(const side of [-1,1]) { const spike=cone(axe,darkIron,side*.07,1.66,0,.075,.27,0,0,side*-.15); }
+  rivet(axe,0,1.36,.14,.055);
+  return axe;
+}
+
+// The warrior is assembled as a jointed hierarchy.
+function createOrc() {
+  // Angle of the axe handle in the fist, measured from the forearm towards the knuckles
+  const AXE_GRIP=2.0;
+  const orc=new THREE.Group(); scene.add(orc);
+  const body=new THREE.Group(); body.position.y=2.15; orc.add(body);
+  orb(body,skin,0,.25,0,.73,.83,.43);
+  orb(body,skinLight,-.38,.54,.06,.48,.43,.42); orb(body,skinLight,.38,.54,.06,.48,.43,.42);
+  orb(body,skinDark,0,-.43,0,.59,.31,.37);
+  // Chest harness, belt and layered leather skirt
+  const strap=box(body,leather,-.05,.35,.414,.19,1.25,.07,0,0,-.7);
+  box(body,darkLeather,0,-.42,.02,1.15,.23,.77);
+  box(body,gold,0,-.42,.43,.29,.23,.08); box(body,darkIron,0,-.42,.48,.15,.11,.03);
+  for(let i=-2;i<=2;i++) { const flap=box(body,i%2?leatherLight:leather,i*.22,-.77,.22,.21,.54,.18,0,0,i*-.05); rivet(body,i*.22,-.55,.33,.027); }
+  // Head, jaw, features and topknot
+  const head=new THREE.Group(); head.position.set(0,1.08,.02); body.add(head);
+  orb(head,skin,0,.12,0,.48,.56,.4); orb(head,skinLight,0,-.15,.26,.39,.29,.28);
+  orb(head,skinDark,0,-.1,.47,.28,.11,.14);
+  box(head,skinDark,-.22,.23,.35,.35,.13,.13,0,0,-.13); box(head,skinDark,.22,.23,.35,.35,.13,.13,0,0,.13);
+  for(const s of [-1,1]) {
+    orb(head,eye,s*.21,.13,.395,.095,.065,.055,10); orb(head,black,s*.21,.13,.444,.032,.037,.02,8);
+    cone(head,bone,s*.25,-.16,.48,.075,.29,0,0,s*-.16);
+    const ear=cone(head,skin,s*.54,.11,0,.18,.48,0,0,s*-1.18); ear.scale.z=.55;
+    const inner=cone(head,skinDark,s*.57,.1,.105,.085,.28,0,0,s*-1.18); inner.scale.z=.35;
+  }
+  orb(head,darkLeather,0,.61,-.03,.24,.16,.22); orb(head,darkLeather,0,.75,-.08,.19,.23,.18);
+  cylinder(head,leatherLight,0,.63,-.04,.2,.2,.07,10);
+  // Arm pivots, with elbows and hands nested below the shoulders
+  function arm(side) {
+    const shoulder=new THREE.Group(); shoulder.position.set(side*.78,.52,0); shoulder.rotation.z=side*.18; body.add(shoulder);
+    orb(shoulder,skinLight,side*.07,-.13,0,.34,.38,.34);
+    cylinder(shoulder,skin,side*.13,-.39,0,.24,.21,.58);
+    const elbow=new THREE.Group(); elbow.position.set(side*.13,-.68,0); shoulder.add(elbow);
+    orb(elbow,skin,0,0,0,.23,.23,.23);
+    cylinder(elbow,skinLight,0,-.25,0,.22,.25,.55);
+    cylinder(elbow,leather,0,-.29,0,.25,.27,.31);
+    cylinder(elbow,darkIron,0,-.17,0,.26,.26,.055);
+    cylinder(elbow,darkIron,0,-.43,0,.28,.28,.055);
+    const hand=new THREE.Group(); hand.position.set(0,-.61,.02); elbow.add(hand); orb(hand,skinLight,0,0,0,.24,.24,.22);
+    // The axe hand curls its fingers along the handle
+    const fingers=new THREE.Group(); hand.add(fingers);
+    if(side<0) fingers.rotation.set(AXE_GRIP-Math.PI/2,Math.PI/2,0);
+    for(let j=0;j<3;j++) orb(fingers,skin,side*(j-1)*.11,-.06,.18,.055,.105,.06,8);
+    // Angular pauldrons with gold studs
+    const pad=orb(shoulder,side<0?darkIron:leather,side*.04,.02,0,.4,.2,.37); pad.rotation.z=side*.2;
+    box(shoulder,darkIron,side*.09,-.1,.29,.55,.18,.1,0,0,side*.15);
+    rivet(shoulder,side*.18,-.08,.35); rivet(shoulder,-side*.08,-.08,.35);
+    return {shoulder,elbow,hand};
+  }
+  const right=arm(-1), left=arm(1);
+  right.shoulder.rotation.x=-.18; right.elbow.rotation.x=-.7; right.hand.rotation.x=-.3;
+  left.shoulder.rotation.x=.1; left.elbow.rotation.x=-.2;
+  // Handle runs forward out of the fist, blades lie in the swing plane
+  const axe=createAxe(); axe.position.set(0,-.04,0); axe.rotation.set(AXE_GRIP,Math.PI/2,0); right.hand.add(axe);
+  // Thick short legs and broad boots
+  for(const s of [-1,1]) {
+    const leg=new THREE.Group(); leg.position.set(s*.36,1.55,0); orc.add(leg);
+    orb(leg,skinDark,0,-.14,0,.3,.37,.3); cylinder(leg,skin,0,-.43,0,.24,.23,.52);
+    const knee=new THREE.Group(); knee.position.y=-.68; leg.add(knee);
+    orb(knee,skinLight,0,0,.02,.25,.22,.25); cylinder(knee,leather,0,-.25,0,.23,.25,.4);
+    box(knee,darkLeather,0,-.52,.13,.48,.3,.67); box(knee,iron,0,-.44,.46,.48,.13,.12);
+    rivet(knee,s*.14,-.44,.53,.03);
+  }
+  return {orc,body,right,left,axe};
+}
+const warrior=createOrc();
+
+// Timed poses and small impact particles
+const clock=new THREE.Clock(); let attackTime=-1, attackStart=0, impactDone=false, shake=0, particles=[];
+const rest={ armX:warrior.right.shoulder.rotation.x, armZ:warrior.right.shoulder.rotation.z, elbowX:warrior.right.elbow.rotation.x, wristX:warrior.right.hand.rotation.x };
+// Overhead chop: raise the axe over the head through the front, then bring it down in front of the body
+const frames=[
+  {t:0, ax:0, az:0, ex:0, wx:0, bx:0, by:0, ox:0},
+  {t:.35, ax:-2.52, az:0, ex:.3, wx:.46, bx:-.18, by:-.25, ox:-.08},
+  {t:.55, ax:-.77, az:.33, ex:.65, wx:.9, bx:.25, by:.2, ox:.12},
+  {t:1, ax:0, az:0, ex:0, wx:0, bx:0, by:0, ox:0}
+];
+const easeOut=t=>1-Math.pow(1-t,3), easeIn=t=>t*t, easeInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function impact() {
+  shake=.15;
+  const p=new THREE.Vector3(0,1.4,0); warrior.axe.localToWorld(p);
+  const positions=new Float32Array(30*3), velocities=[];
+  for(let i=0;i<30;i++){ positions.set([p.x,p.y,p.z],i*3); velocities.push(new THREE.Vector3((Math.random()-.5)*3,Math.random()*2.7-.4,(Math.random()-.5)*3)); }
+  const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  const material=new THREE.PointsMaterial({color:'#ffc37b',size:.09,transparent:true,depthWrite:false});
+  const points=new THREE.Points(geo,material); scene.add(points); particles.push({points,velocities,life:.55});
+  const flash=document.querySelector('.flash'); flash.classList.add('hit'); setTimeout(()=>flash.classList.remove('hit'),45);
+  try { const AC=window.AudioContext||window.webkitAudioContext; if(AC){ const ctx=new AC(), osc=ctx.createOscillator(), gain=ctx.createGain(); osc.type='sine'; osc.frequency.setValueAtTime(110,ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(35,ctx.currentTime+.18); gain.gain.setValueAtTime(.14,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.2); osc.connect(gain).connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+.21); osc.onended=()=>ctx.close(); } } catch(e) {}
+}
+function playAttack() { if(attackTime>=0)return; attackTime=0; attackStart=clock.elapsedTime; impactDone=false; document.querySelector('#attackBtn').disabled=true; }
+function setupUI() { document.querySelector('#attackBtn').addEventListener('click',playAttack); }
+setupUI();
+function updateAnimation(dt, elapsed) {
+  if(attackTime>=0) {
+    attackTime=Math.min(elapsed-attackStart,1);
+    let i=attackTime<.35?0:attackTime<.55?1:2; const a=frames[i], b=frames[i+1];
+    let t=(attackTime-a.t)/(b.t-a.t); t=[easeOut,easeIn,easeInOut][i](t);
+    const v=k=>THREE.MathUtils.lerp(a[k],b[k],t);
+    warrior.right.shoulder.rotation.x=rest.armX+v('ax'); warrior.right.shoulder.rotation.z=rest.armZ+v('az');
+    warrior.right.elbow.rotation.x=rest.elbowX+v('ex'); warrior.right.hand.rotation.x=rest.wristX+v('wx'); warrior.body.rotation.x=v('bx'); warrior.body.rotation.y=v('by'); warrior.orc.rotation.x=v('ox');
+    if(attackTime>=.55&&!impactDone){ scene.updateMatrixWorld(true); impact(); impactDone=true; }
+    if(attackTime>=1){ attackTime=-1; document.querySelector('#attackBtn').disabled=false; }
+  } else {
+    warrior.body.scale.y=1+Math.sin(elapsed*1.8)*.012;
+    warrior.right.shoulder.rotation.x=rest.armX+Math.sin(elapsed*1.5)*.025;
+    warrior.left.shoulder.rotation.x=.1+Math.sin(elapsed*1.5+.5)*.025;
+  }
+  for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.life-=dt; const arr=p.points.geometry.attributes.position; for(let j=0;j<p.velocities.length;j++){ const v=p.velocities[j]; v.y-=5*dt; arr.array[j*3]+=v.x*dt; arr.array[j*3+1]+=v.y*dt; arr.array[j*3+2]+=v.z*dt; } arr.needsUpdate=true; p.points.material.opacity=Math.max(0,p.life/.55); if(p.life<=0){scene.remove(p.points);p.points.geometry.dispose();p.points.material.dispose();particles.splice(i,1);} }
+}
+function animate() {
+  requestAnimationFrame(animate); const dt=Math.min(clock.getDelta(),.05); updateAnimation(dt,clock.elapsedTime);
+  controls.update();
+  if(shake>0){ shake=Math.max(0,shake-dt); const strength=shake*.16; const offset=new THREE.Vector3((Math.random()-.5)*strength,(Math.random()-.5)*strength,(Math.random()-.5)*strength); camera.position.add(offset); renderer.render(scene,camera); camera.position.sub(offset); }
+  else renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>

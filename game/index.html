@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Low Poly Mario</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game"></div>
+<header class="hud" aria-label="Game status">
+  <div class="brand"><span class="brand-icon">M</span><span>LOW POLY<small>MARIO</small></span></div>
+  <div class="stats"><div><span>Score</span><strong id="score">000000</strong></div><div><span>Coins</span><strong id="coins">× 00</strong></div><div><span>World</span><strong>1 - 1</strong></div><div><span>Time</span><strong id="time">300</strong></div><div><span>Lives</span><strong id="lives">× 3</strong></div><div class="power-stat"><span>Power</span><strong id="power">Small</strong></div></div>
+  <div class="hud-actions"><button id="mute" aria-label="Mute sound" title="Mute sound">♪</button><button id="pause" aria-label="Pause game" title="Pause game">Ⅱ</button></div>
+</header>
+<div class="progress"><span>START</span><div><i id="progress-fill"></i></div><span>CASTLE</span></div>
+<div id="notice" aria-live="polite"></div>
+<div id="overlay" class="overlay"><div class="panel"><div class="eyebrow"><span></span> A LITTLE VOXEL ADVENTURE <span></span></div><h1 id="overlay-title">Low Poly<br><em>Mario</em></h1><p id="overlay-copy">A familiar little adventure, built one block at a time.</p><div id="results"></div><button id="primary" class="primary">Play <span>→</span></button><div id="controls-help" class="help"><div><b>← →</b><span>MOVE</span></div><div><b>SPACE</b><span>JUMP</span></div><div><b>SHIFT</b><span>RUN / FIRE</span></div></div><p class="hint">Collect coins, discover secrets, and reach the flag.</p></div></div>
+<div class="touch" aria-label="Touch controls"><div class="touch-group"><button data-key="left" aria-label="Move left">◀</button><button data-key="right" aria-label="Move right">▶</button><button data-key="down" aria-label="Duck or enter pipe">▼</button></div><div class="touch-group"><button data-key="run" aria-label="Run or throw fireball">✦</button><button data-key="jump" class="jump" aria-label="Jump">↑</button></div></div>
+<div id="fallback" hidden>WebGL is unavailable. Please open this game in a browser with WebGL enabled.</div>
+<script type="module" src="game.js"></script>
+</body></html>
